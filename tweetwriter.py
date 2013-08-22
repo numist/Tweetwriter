@@ -52,7 +52,6 @@ class Tweeter:
     def __init__(self, id=None):
         if self.session is None:
             config = json.loads(readFile('config.json'))
-            print config
             self.session = OAuth1Session(config['consumer_key'],
                                          config['consumer_secret'],
                                          config['access_token'],
@@ -60,7 +59,8 @@ class Tweeter:
         if id is None:
             self.fetch()
         else:
-            latest = id
+            self.latest = id
+            
     def fetch(self):
         params = {'q': '@Square', 'result_type': 'recent'}
         if self.latest is not None:
@@ -80,7 +80,7 @@ def printTweets(tweets):
     for tweet in tweets:
         Printer().type(tweet['text'], tweet['created_at'], tweet['user']['screen_name'])
 
-tweeter = Tweeter(id='370432577292615680')
+tweeter = Tweeter()
 tweets = tweeter.fetch()
 printTweets(tweets)
 print "sleeeeepy"
