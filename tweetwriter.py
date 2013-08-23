@@ -12,10 +12,10 @@ import syslog
 import time
 
 # deps:
-import serial                   # pyserial
-import dateutil.parser          # python-dateutil
-import pytz                     # pytz
-from rauth import OAuth1Session # rauth
+import serial
+import dateutil.parser
+import pytz
+from rauth import OAuth1Session
 
 os.environ['TZ'] = 'us/Pacific'
 time.tzset()
@@ -118,12 +118,17 @@ def printTweets(tweets):
 
         Printer().typeTweet(h.unescape(tweet['text']), tweet['created_at'], tweet['user']['screen_name'], tweet['place'])
 
-tweeter = Tweeter('370726959707222017')
+tweeter = Tweeter()
 date = datetime.date.today()
+print "Initialized Tweeter, last id: "+tweeter.latest
 
 while 1:
-    tweets = tweeter.fetch()
-    printTweets(tweets)
+    try:
+        tweets = tweeter.fetch()
+        printTweets(tweets)
+    except Exception, e:
+        print "Fetch error({0}): {1}".format(e.errno, e.strerror)
+    
     time.sleep(60)
     newdate = datetime.date.today()
     if date.day != newdate.day:
