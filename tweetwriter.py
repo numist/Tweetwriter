@@ -1,15 +1,25 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import serial
+# sys:
 import time
 import glob
 import json
 import HTMLParser
 import syslog
 import random
+import dateutil.parser
+import datetime
+import time
+import os
 
+# deps:
+import serial
+import pytz
 from rauth import OAuth1Session
+
+os.environ['TZ'] = 'us/Pacific'
+time.tzset()
 
 def readFile(filename):
     f = open(filename, 'r')
@@ -19,17 +29,26 @@ def readFile(filename):
 
 class Printer:
     allowed_characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*()-_+=[]?/,.<>;:\'" \n\t'
-    def type(self, tweet, time, name):
-        print name + " " + time + " " + tweet
-        syslog.syslog(syslog.LOG_INFO, "Tweet by @"+name+" from "+time)
 
+    def type(self, output):
         devs = glob.glob('/dev/ttyUSB*')
         if len(devs):
             for dev in devs:
                 syslog.syslog(syslog.LOG_INFO, "Printing to "+dev)
-                self.sprint(dev, 115200, "@"+name+":\n"+tweet+"\n\n\n")
+                self.sprint(dev, 115200, output)
         else:
             syslog.syslog(syslog.LOG_WARNING, "No output devices found")
+
+    def typeTweet(self, tweet, created, name, place):
+        timestamp = dateutil.parser.parse(created).astimezone(pytz.timezone('US/Pacific'))
+        output = "@"+name+" at "+timestamp.strftime("%H:%M:%S %Z")
+        if place is not None:
+            output = output+" from "+place['full_name']
+        output = output + ":\n"+tweet+"\n\n\n"
+        print output.strip()
+
+        syslog.syslog(syslog.LOG_INFO, "Tweet by @"+name+" from "+created)
+        self.type(output)
 
     def sprint(self, path, baud, payload):
         port = serial.Serial(path, baud)
@@ -88,6 +107,7 @@ def printTweets(tweets):
     tweets.reverse()
     h = HTMLParser.HTMLParser()
     for tweet in tweets:
+
         """ NO MORE RETWEETS JESUS """
         if tweet['text'].startswith('RT @'):
             print "Skipping RT by "+tweet['user']['screen_name']
@@ -96,11 +116,17 @@ def printTweets(tweets):
         """ CURLY QUOTES ARE THE DEVIL """
         tweet['text'] = tweet['text'].replace('“'.decode('utf-8'), '"').replace('”'.decode('utf-8'), '"')
 
-        Printer().type(h.unescape(tweet['text']), tweet['created_at'], tweet['user']['screen_name'])
+        Printer().typeTweet(h.unescape(tweet['text']), tweet['created_at'], tweet['user']['screen_name'], tweet['place'])
 
-tweeter = Tweeter('370700607075524609')
+tweeter = Tweeter()
+date = datetime.date.today()
 
 while 1:
     tweets = tweeter.fetch()
     printTweets(tweets)
     time.sleep(60)
+    newdate = datetime.date.today()
+    if date.day != newdate.day:
+        print "Day changed to "+date.strftime("%A %B %d, %Y")+"\n\n\n"
+        Printer().type("Day changed to: "+newdate.strftime("%A %B %d, %Y"))
+    date = newdate
