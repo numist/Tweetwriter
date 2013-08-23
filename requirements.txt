@@ -1,0 +1,4 @@
+pyserial==2.6
+pytz==2013b
+python_dateutil==2.1
+rauth==0.6.1
