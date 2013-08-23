@@ -8,10 +8,10 @@ import json
 import os
 import random
 import sys
-import syslog
 import time
 import traceback
 from HTMLParser import HTMLParser
+from syslog import *
 
 # deps:
 import serial
@@ -55,10 +55,9 @@ class Printer:
         devs = glob.glob(serial_glob)
         if len(devs):
             for dev in devs:
-                syslog.syslog(syslog.LOG_INFO, "Printing to "+dev)
                 self.sprint(dev, serial_baud_rate, output)
         else:
-            syslog.syslog(syslog.LOG_WARNING, "No output devices found")
+            syslog(LOG_WARNING, "No output devices found")
 
     def typeTweet(self, tweet, created, name, place, source):
         timestamp = dateutil.parser.parse(created).astimezone(pytz.timezone(time_zone))
@@ -84,7 +83,7 @@ class Printer:
 
             # Dumb line wrapping, if necessary
             if pos >= line_width and c != '\n':
-                syslog.syslog(syslog.LOG_WARNING, "Force wrapping!")
+                syslog(LOG_WARNING, "Force wrapping!")
                 port.write('\n')
                 time.sleep(wait_newline)
                 pos = 0
@@ -121,7 +120,7 @@ class Tweeter:
         if result['statuses'] and len(result['statuses']):
             tweets = result['statuses']
             self.latest = tweets[0]['id_str']
-            syslog.syslog(syslog.LOG_INFO, "Latest tweet id is " + self.latest)
+            syslog(LOG_INFO, "Latest tweet id is " + self.latest)
             return tweets
         return []
 
@@ -147,9 +146,7 @@ def printTweets(tweets):
     for tweet in tweets:
         # Omit retweets
         if 'retweeted_status' in tweet:
-            rtlog = "Skipping @"+tweet['user']['screen_name']+"'s RT of "+tweet['retweeted_status']['id_str']+" (originally by @"+tweet['retweeted_status']['user']['screen_name']+")"
-            print rtlog
-            syslog.syslog(syslog.LOG_INFO, rtlog)
+            print "Skipping @"+tweet['user']['screen_name']+"'s RT of "+tweet['retweeted_status']['id_str']+" (originally by @"+tweet['retweeted_status']['user']['screen_name']+")"
             continue
 
         text = tweet['text']
