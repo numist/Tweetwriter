@@ -2,21 +2,20 @@
 # -*- coding: utf-8 -*-
 
 # sys:
-import time
-import glob
-import json
-import HTMLParser
-import syslog
-import random
-import dateutil.parser
 import datetime
-import time
+import glob
+import HTMLParser
+import json
 import os
+import random
+import syslog
+import time
 
 # deps:
-import serial
-import pytz
-from rauth import OAuth1Session
+import serial                   # pyserial
+import dateutil.parser          # python-dateutil
+import pytz                     # pytz
+from rauth import OAuth1Session # rauth
 
 os.environ['TZ'] = 'us/Pacific'
 time.tzset()
@@ -43,7 +42,7 @@ class Printer:
         timestamp = dateutil.parser.parse(created).astimezone(pytz.timezone('US/Pacific'))
         output = "@"+name+" at "+timestamp.strftime("%H:%M:%S %Z")
         if place is not None:
-            output = output+" from "+place['full_name']
+            output = output+" in "+place['full_name']
         output = output + ":\n"+tweet+"\n\n\n"
         print output.strip()
 
@@ -62,7 +61,6 @@ class Printer:
             if c == '\n':
                 sleeptime = 2.0 * float(pos) / 65.0 + 0.2
                 pos = 0
-                print "sleeping for "+str(sleeptime).rstrip('0')+" seconds"
                 time.sleep(sleeptime)
             else:
                 pos = pos + 1
@@ -115,10 +113,12 @@ def printTweets(tweets):
 
         """ CURLY QUOTES ARE THE DEVIL """
         tweet['text'] = tweet['text'].replace('“'.decode('utf-8'), '"').replace('”'.decode('utf-8'), '"')
+        """ SO ARE ELLIPSES """
+        tweet['text'] = tweet['text'].replace('…'.decode('utf-8'), '...')
 
         Printer().typeTweet(h.unescape(tweet['text']), tweet['created_at'], tweet['user']['screen_name'], tweet['place'])
 
-tweeter = Tweeter()
+tweeter = Tweeter('370726959707222017')
 date = datetime.date.today()
 
 while 1:
@@ -127,6 +127,6 @@ while 1:
     time.sleep(60)
     newdate = datetime.date.today()
     if date.day != newdate.day:
-        print "Day changed to "+date.strftime("%A %B %d, %Y")+"\n\n\n"
-        Printer().type("Day changed to: "+newdate.strftime("%A %B %d, %Y"))
+        print "Day changed to "+date.strftime("%A %B %d, %Y")
+        Printer().type("Day changed to: "+newdate.strftime("%A %B %d, %Y")+"\n\n\n")
     date = newdate
