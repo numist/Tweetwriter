@@ -172,7 +172,17 @@ def printTweets(tweets):
 # Initialization
 os.environ['TZ'] = time_zone
 time.tzset()
-tweeter = Tweeter()
+
+tweeter = None
+while tweeter is None:
+    try:
+        tweeter = Tweeter()
+    except Exception:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)
+        time.sleep(10)
+
 date = datetime.date.today()
 print "Most recent id: "+tweeter.latest
 
