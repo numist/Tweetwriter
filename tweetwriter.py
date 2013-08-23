@@ -65,7 +65,7 @@ class Printer:
         output = "@"+name+" at "+timestamp.strftime("%H:%M:%S %Z")
         if place != None:
             output = output+" in "+place['full_name']
-        if source != 'web':
+        if source != 'web' and source != None:
             output = output+" using "+source
         output = output + ":\n"+tweet+"\n\n\n"
         print output.replace('\n', ' ').strip()
@@ -167,7 +167,8 @@ def printTweets(tweets):
         # Soft line wrap
         text = softWrap(text, line_width)
 
-        Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'], h.unescape(strip_tags(tweet['source']).strip()))
+        Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'], None)
+        # Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'], h.unescape(strip_tags(tweet['source']).strip()))
 
 # Initialization
 os.environ['TZ'] = time_zone
@@ -176,7 +177,7 @@ time.tzset()
 tweeter = None
 while tweeter is None:
     try:
-        tweeter = Tweeter()
+        tweeter = Tweeter('370639089022038016')
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
