@@ -149,7 +149,7 @@ def printTweets(tweets):
 # Initialization
 os.environ['TZ'] = time_zone
 time.tzset()
-tweeter = Tweeter('370776114576113665')
+tweeter = Tweeter()
 date = datetime.date.today()
 print "Most recent id: "+tweeter.latest
 
