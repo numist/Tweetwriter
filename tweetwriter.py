@@ -171,6 +171,6 @@ while 1:
     time.sleep(wait_poll)
     newdate = datetime.date.today()
     if date.day != newdate.day:
-        print "Day changed to "+date.strftime("%A %B %d, %Y")
+        print "Day changed to: "+newdate.strftime("%A %B %d, %Y")
         Printer().type("Day changed to: "+newdate.strftime("%A %B %d, %Y")+"\n\n\n")
     date = newdate
