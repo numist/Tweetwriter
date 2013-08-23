@@ -1,0 +1,47 @@
+#! /bin/sh
+# /etc/init.d/tweetwriter
+#
+
+### BEGIN INIT INFO
+# Provides: tweetwriter
+# Required-Start: $syslog $networking $udev
+# Required-Stop: $syslog $networking $udev
+# Should-Start: 
+# Should-Stop: 
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start and stop tweetwriter
+# Description: Tweetwriter
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_action_begin_msg "Starting script tweetwriter "
+
+    su -l -c "pushd /home/pi/tweetwriter; python tweetwriter.py" pi > /dev/null &
+
+    log_action_end_msg $?
+    ;;
+  stop)
+    log_action_begin_msg "Stopping script tweetwriter"
+
+    pid=`ps auxww | grep python | grep [t]weetwriter | awk '{ print $2; }' | head -n1`
+    if test -z $pid
+      log_action_msg "tweetwriter not running"
+      log_action_end_msg $?
+      exit 0
+    then
+      kill $pid
+    fi 
+
+    log_action_end_msg $?
+    ;;
+  *)
+    echo "Usage: /etc/init.d/tweetwriter {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0
