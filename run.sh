@@ -1,5 +1,8 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd $DIR > /dev/null
+
 if ! which virtualenv > /dev/null; then
     echo "This script requires virtualenv. Attempting to install..."
     if which pip
