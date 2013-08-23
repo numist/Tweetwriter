@@ -30,7 +30,7 @@ case "$1" in
   stop)
     log_action_begin_msg "Stopping script tweetwriter"
 
-    pid=`ps auxww | grep python | grep [t]weetwriter | awk '{ print $2; }' | head -n1`
+    pid=`ps auxww | grep "[b]ash $RUNSCRIPT" | awk '{ print $2; }' | head -n1`
     if test -z $pid
       log_action_msg "tweetwriter not running"
       log_action_end_msg $?
