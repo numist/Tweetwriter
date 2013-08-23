@@ -8,8 +8,10 @@ import HTMLParser
 import json
 import os
 import random
+import sys
 import syslog
 import time
+import traceback
 
 # deps:
 import serial
@@ -64,6 +66,14 @@ class Printer:
             if c not in serial_allowed_characters:
                 print "replacing character '"+c+"' with '?'"
                 c = "?"
+
+            """ Dumb line wrapping, if necessary """
+            if pos >= line_width and c != '\n':
+                syslog.syslog(syslog.LOG_WARNING, "Force wrapping!")
+                port.write('\n')
+                time.sleep(wait_newline)
+                pos = 0
+
             port.write(c)
             if c == '\n':
                 sleeptime = float(wait_newline) * float(pos) / float(line_width) + 0.2
@@ -72,12 +82,6 @@ class Printer:
             else:
                 pos = pos + 1
                 time.sleep(wait_char)
-                """ Dumb line wrapping """
-                if pos >= line_width:
-                    syslog.syslog(syslog.LOG_WARNING, "Force wrapping!")
-                    port.write('\n')
-                    time.sleep(wait_newline)
-                    pos = 0
 
 class Tweeter:
     session = None
@@ -104,8 +108,6 @@ class Tweeter:
             self.latest = tweets[0]['id_str']
             syslog.syslog(syslog.LOG_INFO, "Latest tweet id is " + self.latest)
             return tweets
-        else:
-            syslog.syslog(syslog.LOG_INFO, "No new tweets since " + self.latest)
         return []
 
 def softWrap(text, cols=80):

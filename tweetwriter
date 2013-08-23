@@ -20,7 +20,7 @@ case "$1" in
   start)
     log_action_begin_msg "Starting script tweetwriter "
 
-    su -l -c "pushd /home/pi/tweetwriter; python tweetwriter.py" pi > /dev/null &
+    su -l -c "pushd /home/pi/tweetwriter; bash run.sh" pi > /dev/null &
 
     log_action_end_msg $?
     ;;
