@@ -44,7 +44,7 @@ class Printer:
         if place is not None:
             output = output+" in "+place['full_name']
         output = output + ":\n"+tweet+"\n\n\n"
-        print output.strip()
+        print output.replace('\n', ' ').strip()
 
         syslog.syslog(syslog.LOG_INFO, "Tweet by @"+name+" from "+created)
         self.type(output)
@@ -108,7 +108,7 @@ def printTweets(tweets):
 
         """ NO MORE RETWEETS JESUS """
         if tweet['text'].startswith('RT @'):
-            print "Skipping RT by "+tweet['user']['screen_name']
+            print "Skipping RT by "+tweet['user']['screen_name']+"("+tweet['id_str']+")"
             continue
 
         """ CURLY QUOTES ARE THE DEVIL """
@@ -120,14 +120,14 @@ def printTweets(tweets):
 
 tweeter = Tweeter()
 date = datetime.date.today()
-print "Initialized Tweeter, last id: "+tweeter.latest
+print "Most recent id: "+tweeter.latest
 
 while 1:
     try:
         tweets = tweeter.fetch()
         printTweets(tweets)
-    except Exception, e:
-        print "Fetch error({0}): {1}".format(e.errno, e.strerror)
+    except Exception as e:
+        print "Fetch error: "+e
     
     time.sleep(60)
     newdate = datetime.date.today()
