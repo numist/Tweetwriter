@@ -129,21 +129,24 @@ def printTweets(tweets):
     tweets.reverse()
     h = HTMLParser.HTMLParser()
     for tweet in tweets:
-
         """ NO MORE RETWEETS JESUS """
         if tweet['text'].startswith('RT @'):
             print "Skipping RT by "+tweet['user']['screen_name']+" ("+tweet['id_str']+")"
             continue
 
-        """ CURLY QUOTES ARE THE DEVIL """
-        text = tweet['text'].replace('“'.decode('utf-8'), '"').replace('”'.decode('utf-8'), '"')
-        """ SO ARE ELLIPSES """
-        text = text.replace('…'.decode('utf-8'), '...')
-        text = text.replace('\t', '    ')
+        text = tweet['text']
+
+        """ Replace t.co links with display links """
+        for url in tweet['entities']['urls']:
+            text = text.replace(url['url'], url['display_url'])
+
+        """ So much (re)formatting to make everything palatable to the typewriter: """
+        text = text.replace('“'.decode('utf-8'), '"').replace('”'.decode('utf-8'), '"').replace('…'.decode('utf-8'), '...').replace('\t', '    ')
 
         """ &amp -> &, etc """
         text = h.unescape(text)
 
+        """ Soft line wrap """
         text = softWrap(text, line_width)
 
         Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'])
