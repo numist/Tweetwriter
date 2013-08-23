@@ -4,7 +4,6 @@
 # sys:
 import datetime
 import glob
-import HTMLParser
 import json
 import os
 import random
@@ -12,6 +11,7 @@ import sys
 import syslog
 import time
 import traceback
+from HTMLParser import HTMLParser
 
 # deps:
 import serial
@@ -30,6 +30,20 @@ wait_newline = 2.2
 wait_poll = 60
 wait_serial_init = 5
 
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
 def readFile(filename):
     f = open(filename, 'r')
     result = f.read()
@@ -46,15 +60,16 @@ class Printer:
         else:
             syslog.syslog(syslog.LOG_WARNING, "No output devices found")
 
-    def typeTweet(self, tweet, created, name, place):
+    def typeTweet(self, tweet, created, name, place, source):
         timestamp = dateutil.parser.parse(created).astimezone(pytz.timezone(time_zone))
         output = "@"+name+" at "+timestamp.strftime("%H:%M:%S %Z")
-        if place is not None:
+        if place != None:
             output = output+" in "+place['full_name']
+        if source != 'web':
+            output = output+" using "+source
         output = output + ":\n"+tweet+"\n\n\n"
         print output.replace('\n', ' ').strip()
 
-        syslog.syslog(syslog.LOG_INFO, "Tweet by @"+name+" from "+created)
         self.type(output)
 
     def sprint(self, path, baud, payload):
@@ -67,7 +82,7 @@ class Printer:
                 print "replacing character '"+c+"' with '?'"
                 c = "?"
 
-            """ Dumb line wrapping, if necessary """
+            # Dumb line wrapping, if necessary
             if pos >= line_width and c != '\n':
                 syslog.syslog(syslog.LOG_WARNING, "Force wrapping!")
                 port.write('\n')
@@ -126,30 +141,33 @@ def softWrap(text, cols=80):
     return text
         
 def printTweets(tweets):
+    # Want newest last
     tweets.reverse()
-    h = HTMLParser.HTMLParser()
+    h = HTMLParser()
     for tweet in tweets:
-        """ NO MORE RETWEETS JESUS """
-        if tweet['text'].startswith('RT @'):
-            print "Skipping RT by "+tweet['user']['screen_name']+" ("+tweet['id_str']+")"
+        # Omit retweets
+        if 'retweeted_status' in tweet:
+            rtlog = "Skipping @"+tweet['user']['screen_name']+"'s RT of "+tweet['retweeted_status']['id_str']+" (originally by @"+tweet['retweeted_status']['user']['screen_name']+")"
+            print rtlog
+            syslog.syslog(syslog.LOG_INFO, rtlog)
             continue
 
         text = tweet['text']
 
-        """ Replace t.co links with display links """
+        # Replace t.co links with display links
         for url in tweet['entities']['urls']:
             text = text.replace(url['url'], url['display_url'])
 
-        """ So much (re)formatting to make everything palatable to the typewriter: """
+        # So much (re)formatting to make everything palatable to the typewriter:
         text = text.replace('“'.decode('utf-8'), '"').replace('”'.decode('utf-8'), '"').replace('…'.decode('utf-8'), '...').replace('\t', '    ')
 
-        """ &amp -> &, etc """
+        # &amp -> &, etc
         text = h.unescape(text)
 
-        """ Soft line wrap """
+        # Soft line wrap
         text = softWrap(text, line_width)
 
-        Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'])
+        Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'], strip_tags(tweet['source']).strip())
 
 # Initialization
 os.environ['TZ'] = time_zone
