@@ -167,7 +167,7 @@ def printTweets(tweets):
         # Soft line wrap
         text = softWrap(text, line_width)
 
-        Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'], strip_tags(tweet['source']).strip())
+        Printer().typeTweet(text, tweet['created_at'], tweet['user']['screen_name'], tweet['place'], h.unescape(strip_tags(tweet['source']).strip()))
 
 # Initialization
 os.environ['TZ'] = time_zone
