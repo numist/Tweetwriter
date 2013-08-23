@@ -177,7 +177,7 @@ time.tzset()
 tweeter = None
 while tweeter is None:
     try:
-        tweeter = Tweeter('370639089022038016')
+        tweeter = Tweeter()
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
