@@ -23,20 +23,21 @@ case "$1" in
   start)
     log_action_begin_msg "Starting script tweetwriter "
 
-    su -l -c "bash $RUNSCRIPT" "$RUNUSER" > /dev/null &
+    su -l -c "bash $RUNSCRIPT >> /var/log/tweetwriter" "$RUNUSER" &
 
     log_action_end_msg $?
     ;;
   stop)
     log_action_begin_msg "Stopping script tweetwriter"
 
-    pid=`ps auxww | grep "[b]ash $RUNSCRIPT" | awk '{ print $2; }' | head -n1`
-    if test -z $pid
+    pid=`ps auxww | grep "[b]ash $RUNSCRIPT" | awk '{ print $2; }'`
+    if ! [ "$pid" ]; then
       log_action_msg "tweetwriter not running"
       log_action_end_msg $?
       exit 0
-    then
-      kill $pid
+    else
+      echo $pid | xargs kill
+      echo "killed"
     fi 
 
     log_action_end_msg $?
